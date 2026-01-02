@@ -3,75 +3,596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnySub - 万能在线视频字幕挂载器</title>
+    <meta name="description" content="字在 AnySub - Edge 浏览器本地字幕挂载工具">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <title>字在 AnySub - 字幕挂载工具</title>
     <style>
-        /* 保持 V9.0 极光风格 */
-        :root { --primary: #1976d2; --text: #263238; --glass: rgba(255, 255, 255, 0.75); --border: rgba(255, 255, 255, 0.8); }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; color: var(--text); background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-        nav { width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; max-width: 1000px; }
-        .logo { font-weight: 800; font-size: 20px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .hero { text-align: center; padding: 80px 20px; max-width: 800px; animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        h1 { font-size: 48px; margin: 0 0 20px 0; background: linear-gradient(45deg, #1976d2, #42a5f5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 20px; color: #78909c; line-height: 1.6; margin-bottom: 40px; }
-        .btn-group { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-        .btn { padding: 14px 32px; border-radius: 50px; font-size: 16px; font-weight: bold; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(25, 118, 210, 0.4); }
-        .btn-secondary { background: white; color: var(--text); border: 1px solid rgba(0,0,0,0.1); }
-        .btn-secondary:hover { background: #f5f5f5; }
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; padding: 0 20px 60px 20px; width: 100%; box-sizing: border-box; }
-        .card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .card h3 { margin-top: 0; color: var(--primary); }
-        footer { margin-top: auto; padding: 40px; color: #90a4ae; font-size: 14px; text-align: center; }
-        footer a { color: #78909c; text-decoration: none; margin: 0 10px; }
-        footer a:hover { color: var(--primary); }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 600px) { h1 { font-size: 32px; } .subtitle { font-size: 16px; } }
+        /* --- 1. 核心变量 --- */
+        :root {
+            --primary: #1976d2;
+            --primary-hover: #1565c0;
+            --text: #263238;
+            --text-sub: #546e7a;
+            --glass: rgba(255, 255, 255, 0.92);
+            --border: rgba(25, 118, 210, 0.12);
+            --btn-sec-border: rgba(25, 118, 210, 0.25);
+            --bg-gradient: linear-gradient(135deg, #f3f6f9 0%, #e3f2fd 100%);
+            --card-shadow: 0 10px 40px rgba(31, 38, 135, 0.05);
+            --nav-hover: rgba(25, 118, 210, 0.06);
+        }
+
+        [data-theme="dark"] {
+            --primary: #64b5f6;
+            --primary-hover: #42a5f5;
+            --text: #eceff1;
+            --text-sub: #b0bec5;
+            --glass: rgba(30, 41, 59, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --btn-sec-border: rgba(255, 255, 255, 0.2);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            --nav-hover: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- 2. 基础布局 --- */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+            color: var(--text);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            /* 默认隐藏滚动条以保持美观，但如果内容溢出（屏幕太矮）则自动显示 */
+            overflow-y: hidden;
+        }
+
+        /* 如果屏幕高度不足以展示拉大间距后的内容，自动允许滚动 */
+        @media (max-height: 900px) {
+            body {
+                overflow-y: auto;
+            }
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.3s;
+        }
+
+        /* --- 3. 导航栏 (保持不变) --- */
+        nav {
+            width: 100%;
+            height: 88px; /* 保持原高度 */
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            max-width: 1240px;
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.1s;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            font-size: 16px;
+            color: var(--text-sub);
+            font-weight: 500;
+            min-width: 440px;
+            justify-content: flex-end;
+        }
+
+        .nav-link {
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+            .nav-link:hover {
+                color: var(--primary);
+            }
+
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 2px;
+                bottom: -6px;
+                left: 0;
+                background-color: var(--primary);
+                transition: width 0.3s ease;
+            }
+
+            .nav-link:hover::after {
+                width: 100%;
+            }
+
+        .tooltip {
+            position: absolute;
+            top: 160%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: var(--bg-gradient);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .nav-link:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(5px);
+        }
+
+        .icon-group {
+            display: flex;
+            gap: 12px;
+            padding-left: 24px;
+            border-left: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+            .icon-btn:hover {
+                background-color: var(--nav-hover);
+                transform: rotate(10deg);
+            }
+
+        .lang-spin:hover {
+            transform: rotate(180deg);
+        }
+
+        /* --- 4. Hero 区域 (间距优化核心) --- */
+        .hero {
+            text-align: center;
+            /* 1. 保持顶部位置不变 (11vh) */
+            padding-top: 11vh;
+            /* 2. 关键修改：大幅增加底部间距 (原40px -> 90px)，拉开与卡片的距离 */
+            padding-bottom: 90px;
+            max-width: 900px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 54px;
+            /* 修改：增加标题下方间距 (原24px -> 32px) */
+            margin: 0 0 32px 0;
+            background: linear-gradient(120deg, var(--primary), #ab47bc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1.5px;
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+            min-height: 1.2em;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .subtitle {
+            font-size: 19px;
+            color: var(--text-sub);
+            line-height: 1.8;
+            /* 修改：增加副标题下方间距 (原40px -> 48px) */
+            margin-bottom: 48px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.3s;
+            max-width: 820px;
+            min-height: 3.6em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.4s;
+        }
+
+        .btn {
+            padding: 14px 38px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn:active {
+                transform: scale(0.96);
+            }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff !important;
+            border: none;
+            box-shadow: 0 10px 25px rgba(25, 118, 210, 0.25);
+        }
+
+            .btn-primary:not(.disabled):hover {
+                background: var(--primary-hover);
+                transform: translateY(-4px);
+                box-shadow: 0 14px 30px rgba(25, 118, 210, 0.35);
+            }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--btn-sec-border);
+        }
+
+            .btn-secondary:not(.disabled):hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                background: var(--nav-hover);
+                transform: translateY(-4px);
+            }
+
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        /* --- 5. 特性卡片 --- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px; /* 卡片间距也略微增加 */
+            max-width: 1160px;
+            padding: 0 40px 40px;
+            width: 100%;
+            box-sizing: border-box;
+            flex-grow: 1;
+            align-content: start;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            padding: 36px;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s, border-color 0.3s;
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .card:nth-child(1) {
+                animation-delay: 0.5s;
+            }
+
+            .card:nth-child(2) {
+                animation-delay: 0.6s;
+            }
+
+            .card:nth-child(3) {
+                animation-delay: 0.7s;
+            }
+
+            .card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
+                border-color: var(--primary);
+            }
+
+        .card-icon {
+            font-size: 30px;
+            margin-bottom: 20px;
+            background: var(--nav-hover);
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card h3 {
+            margin: 0 0 12px 0;
+            color: var(--text);
+            font-size: 20px;
+        }
+
+        .card p {
+            color: var(--text-sub);
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* --- 6. 页脚 (保持不变) --- */
+        footer {
+            padding: 15px; /* 保持精简高度 */
+            color: var(--text-sub);
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 1s;
+            flex-shrink: 0;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 850px) {
+            h1 {
+                font-size: 40px;
+                min-height: auto;
+            }
+
+            .subtitle {
+                min-height: auto;
+                margin-bottom: 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 90px 20px 40px;
+            }
+
+            nav {
+                padding: 0 24px;
+                height: 70px;
+            }
+
+            .features {
+                padding: 0 24px 40px;
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 28px;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 0.8;
+            }
+        }
     </style>
 </head>
 <body>
     <nav>
-        <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm-6-4h8v2h-8z"/></svg>
-            AnySub
+        <div class="logo" onclick="location.reload()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm-6-4h8v2h-8z" /></svg>
+            <span>字在 AnySub</span>
         </div>
-        <a href="#" target="_blank" style="color:var(--text); text-decoration:none; font-weight:600;">GitHub</a>
+
+        <div class="nav-right">
+            <div class="nav-links">
+                <a class="nav-link" id="nav-install">安装说明</a>
+                <a class="nav-link" id="nav-guide">使用指南</a>
+                <a class="nav-link" id="nav-faq">常见问题</a>
+                <span class="nav-link" onclick="copyEmail()" id="nav-contact">
+                    <span class="tooltip" id="email-tooltip">点击复制邮箱</span>
+                    联系我们
+                </span>
+            </div>
+
+            <div class="icon-group">
+                <a href="https://github.com/ImEatFish/AnySub-website" target="_blank" class="icon-btn" title="GitHub">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
+                </a>
+
+                <button class="icon-btn" id="theme-btn" title="切换模式">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+
+                <button class="icon-btn lang-spin" id="lang-btn" title="Switch Language">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </button>
+            </div>
+        </div>
     </nav>
 
     <div class="hero">
-        <h1>让在线视频，拥有无限可能</h1>
-        <p class="subtitle">
-            AnySub 是一款强大的浏览器扩展，让你能将本地字幕文件无缝挂载到任何 HTML5 网页视频上。<br>
-            支持 .srt .ass .ssa 格式，拥有极光动效与完美的同步校准功能。
+        <h1 id="hero-title">让在线视频，拥有无限可能</h1>
+        <p class="subtitle" id="hero-subtitle">
+            “字在”是一款专为 Edge 打造的字幕增强扩展。<br>
+            无论是 B站、YouTube 还是奈飞，拖入本地文件，即刻享受完美的字幕体验。
         </p>
         <div class="btn-group">
-            <a href="#" class="btn btn-primary">Edge 商店下载</a>
-            <a href="#" class="btn btn-secondary">下载离线安装包</a>
+            <div class="btn btn-primary disabled" id="btn-store">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h20v18H2V3zm18 16V5H4v14h16zM6 7h12v2H6V7zm0 4h12v2H6v-2zm0 4h8v2H6v-2z" /></svg>
+                Edge 商店 (审核中)
+            </div>
+            <a href="https://github.com/ImEatFish/AnySub-website" target="_blank" class="btn btn-secondary" id="btn-offline">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                获取离线包
+            </a>
         </div>
     </div>
 
     <div class="features">
         <div class="card">
-            <h3>🎬 格式全支持</h3>
-            <p>完美支持 SRT、ASS、SSA 格式，无论是双语字幕还是特效字幕，都能完美渲染。</p>
+            <div class="card-icon">📂</div>
+            <h3 id="f1-title">格式全能</h3>
+            <p id="f1-desc">原生支持 .srt、.ass、.ssa 字幕格式。无论是简单的双语字幕，还是复杂的特效字幕，都能完美渲染。</p>
         </div>
         <div class="card">
-            <h3>🎨 样式随心调</h3>
-            <p>支持自定义字体（含本地上传）、字号、位置、描边、阴影，打造最舒适的观影体验。</p>
+            <div class="card-icon">🎨</div>
+            <h3 id="f2-title">样式大师</h3>
+            <p id="f2-desc">不喜欢默认字体？支持上传本地字体文件！还可精细调整字号、描边、阴影和背景透明度。</p>
         </div>
         <div class="card">
-            <h3>⚡️ 极速同步</h3>
-            <p>字幕不同步？内置微秒级时间轴校准功能，轻轻一点，音画完美同步。</p>
+            <div class="card-icon">⚡️</div>
+            <h3 id="f3-title">完美同步</h3>
+            <p id="f3-desc">声音画面对不上？内置毫秒级时间轴微调工具，拖动滑块即可实时校准，告别音画不同步。</p>
         </div>
     </div>
 
     <footer>
-        <p>© 2024 AnySub. Open Source Project.</p>
-        <p>
-            <a href="mailto:你的邮箱@example.com">联系作者</a> | 
-            <a href="/privacy">隐私政策</a>
-        </p>
+        Copyright © 2026 AnySub - All Rights Reserved
     </footer>
+
+    <script>
+        const i18n = {
+            zh: {
+                title: "让在线视频，拥有无限可能",
+                subtitle: "“字在”是一款专为 Edge 打造的字幕增强扩展。<br>无论是 B站、YouTube 还是奈飞，拖入本地文件，即刻享受完美的字幕体验。",
+                btnStore: "Edge 商店 (审核中)", btnOffline: "获取离线包",
+                f1Title: "格式全能", f1Desc: "原生支持 .srt、.ass、.ssa 字幕格式。无论是简单的双语字幕，还是复杂的特效字幕，都能完美渲染。",
+                f2Title: "样式大师", f2Desc: "不喜欢默认字体？支持上传本地字体文件！还可精细调整字号、描边、阴影和背景透明度。",
+                f3Title: "完美同步", f3Desc: "声音画面对不上？内置毫秒级时间轴微调工具，拖动滑块即可实时校准，告别音画不同步。",
+                navInstall: "安装说明", navGuide: "使用指南", navFAQ: "常见问题", navContact: "联系我们",
+                copySuccess: "邮箱已复制！",
+                tooltip: "点击复制邮箱"
+            },
+            en: {
+                title: "Subtitles, Anywhere You Watch",
+                subtitle: "AnySub is a powerful Edge extension for loading local subtitles. Works perfectly on YouTube, Netflix, or any HTML5 video site.",
+                btnStore: "Edge Store (Pending)", btnOffline: "Download Offline",
+                f1Title: "All Formats", f1Desc: "Native support for .srt, .ass, and .ssa formats. Renders complex styling and bilingual subtitles perfectly.",
+                f2Title: "Style Master", f2Desc: "Upload your own font files! Customize size, stroke, shadow, and background opacity to your liking.",
+                f3Title: "Perfect Sync", f3Desc: "Audio out of sync? Use the built-in millisecond adjustment tool to fix timing issues instantly.",
+                navInstall: "Install", navGuide: "Guide", navFAQ: "FAQ", navContact: "Contact",
+                copySuccess: "Email Copied!",
+                tooltip: "Click to copy"
+            }
+        };
+
+        let lang = 'zh';
+        let theme = localStorage.getItem('theme') || 'light';
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-btn');
+
+        function updateThemeIcon(mode) {
+            themeBtn.innerHTML = mode === 'dark'
+                ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+                : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+        }
+
+        function setTheme(mode) {
+            theme = mode;
+            localStorage.setItem('theme', mode);
+            html.setAttribute('data-theme', mode);
+            updateThemeIcon(mode);
+        }
+
+        themeBtn.addEventListener('click', () => setTheme(theme === 'light' ? 'dark' : 'light'));
+        setTheme(theme);
+
+        document.getElementById('lang-btn').addEventListener('click', () => {
+            lang = lang === 'zh' ? 'en' : 'zh';
+            const t = i18n[lang];
+
+            html.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            document.title = lang === 'zh' ? "字在 AnySub - 字幕挂载工具" : "AnySub - Web Video Subtitle Loader";
+
+            const setText = (id, text) => { if (document.getElementById(id)) document.getElementById(id).textContent = text; }
+            const setHTML = (id, html) => { if (document.getElementById(id)) document.getElementById(id).innerHTML = html; }
+
+            setText('hero-title', t.title); setHTML('hero-subtitle', t.subtitle);
+            document.getElementById('btn-store').innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h20v18H2V3zm18 16V5H4v14h16zM6 7h12v2H6V7zm0 4h12v2H6v-2zm0 4h8v2H6v-2z"/></svg> ${t.btnStore}`;
+            document.getElementById('btn-offline').innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${t.btnOffline}`;
+            setText('f1-title', t.f1Title); setText('f1-desc', t.f1Desc);
+            setText('f2-title', t.f2Title); setText('f2-desc', t.f2Desc);
+            setText('f3-title', t.f3Title); setText('f3-desc', t.f3Desc);
+            setText('nav-install', t.navInstall); setText('nav-guide', t.navGuide); setText('nav-faq', t.navFAQ);
+            document.getElementById('nav-contact').childNodes[2].nodeValue = " " + t.navContact;
+
+            const tooltip = document.getElementById('email-tooltip');
+            tooltip.innerText = t.tooltip;
+        });
+
+        function copyEmail() {
+            const email = "AnySub2026@163.com";
+            navigator.clipboard.writeText(email).then(() => {
+                const tooltip = document.getElementById('email-tooltip');
+                tooltip.innerText = i18n[lang].copySuccess;
+                tooltip.style.opacity = '1';
+                setTimeout(() => {
+                    tooltip.innerText = i18n[lang].tooltip;
+                    tooltip.style.opacity = '';
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
