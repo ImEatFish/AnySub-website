@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="字在 AnySub - Edge 浏览器本地字幕挂载工具">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22 fill=%22none%22><rect x=%2248%22 y=%2296%22 width=%22416%22 height=%22320%22 rx=%2264%22 fill=%22%231976d2%22/><g fill=%22white%22><path d=%22M115 256 L155 228 V284 L115 256 Z%22/><rect x=%22175%22 y=%22180%22 width=%22160%22 height=%2228%22 rx=%2214%22/><rect x=%22175%22 y=%22242%22 width=%22220%22 height=%2228%22 rx=%2214%22/><rect x=%22175%22 y=%22304%22 width=%22140%22 height=%2228%22 rx=%2214%22/><circle cx=%22380%22 cy=%22160%22 r=%2218%22 opacity=%220.6%22/></g></svg>">
     <title>字在 AnySub - 字幕挂载工具</title>
     <style>
         /* --- 1. 核心变量 --- */
@@ -46,11 +46,9 @@
             align-items: center;
             transition: background 0.5s ease, color 0.5s ease;
             overflow-x: hidden;
-            /* 默认隐藏滚动条以保持美观，但如果内容溢出（屏幕太矮）则自动显示 */
             overflow-y: hidden;
         }
 
-        /* 如果屏幕高度不足以展示拉大间距后的内容，自动允许滚动 */
         @media (max-height: 900px) {
             body {
                 overflow-y: auto;
@@ -63,10 +61,10 @@
             transition: color 0.3s;
         }
 
-        /* --- 3. 导航栏 (保持不变) --- */
+        /* --- 3. 导航栏 --- */
         nav {
             width: 100%;
-            height: 88px; /* 保持原高度 */
+            height: 88px;
             padding: 0 40px;
             display: flex;
             justify-content: space-between;
@@ -85,10 +83,16 @@
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             cursor: pointer;
             flex-shrink: 0;
         }
+
+            /* 修改点：单独微调 Logo 图标的位置 */
+            .logo svg {
+                /* 这里向下移动 2px，解决了视觉上“偏高”的问题 */
+                transform: translateY(2px);
+            }
 
         .nav-right {
             display: flex;
@@ -183,12 +187,10 @@
             transform: rotate(180deg);
         }
 
-        /* --- 4. Hero 区域 (间距优化核心) --- */
+        /* --- 4. Hero 区域 --- */
         .hero {
             text-align: center;
-            /* 1. 保持顶部位置不变 (11vh) */
             padding-top: 11vh;
-            /* 2. 关键修改：大幅增加底部间距 (原40px -> 90px)，拉开与卡片的距离 */
             padding-bottom: 90px;
             max-width: 900px;
             width: 100%;
@@ -197,7 +199,6 @@
 
         h1 {
             font-size: 54px;
-            /* 修改：增加标题下方间距 (原24px -> 32px) */
             margin: 0 0 32px 0;
             background: linear-gradient(120deg, var(--primary), #ab47bc);
             -webkit-background-clip: text;
@@ -218,7 +219,6 @@
             font-size: 19px;
             color: var(--text-sub);
             line-height: 1.8;
-            /* 修改：增加副标题下方间距 (原40px -> 48px) */
             margin-bottom: 48px;
             margin-left: auto;
             margin-right: auto;
@@ -293,7 +293,7 @@
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 32px; /* 卡片间距也略微增加 */
+            gap: 32px;
             max-width: 1160px;
             padding: 0 40px 40px;
             width: 100%;
@@ -364,9 +364,9 @@
             margin: 0;
         }
 
-        /* --- 6. 页脚 (保持不变) --- */
+        /* --- 6. 页脚 --- */
         footer {
-            padding: 15px; /* 保持精简高度 */
+            padding: 15px;
             color: var(--text-sub);
             font-size: 12px;
             text-align: center;
@@ -440,7 +440,16 @@
 <body>
     <nav>
         <div class="logo" onclick="location.reload()">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm-6-4h8v2h-8z" /></svg>
+            <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="48" y="96" width="416" height="320" rx="64" fill="#1976d2" />
+                <g fill="white">
+                    <path d="M115 256 L155 228 V284 L115 256 Z" />
+                    <rect x="175" y="180" width="160" height="28" rx="14" />
+                    <rect x="175" y="242" width="220" height="28" rx="14" />
+                    <rect x="175" y="304" width="140" height="28" rx="14" />
+                    <circle cx="380" cy="160" r="18" opacity="0.6" />
+                </g>
+            </svg>
             <span>字在 AnySub</span>
         </div>
 
@@ -478,11 +487,11 @@
             无论是 B站、YouTube 还是奈飞，拖入本地文件，即刻享受完美的字幕体验。
         </p>
         <div class="btn-group">
-            <div class="btn btn-primary disabled" id="btn-store">
+            <a href="https://microsoftedge.microsoft.com/addons/detail/ehfngpdjbdalmoobgpclakpieocdjhfe" target="_blank" class="btn btn-primary" id="btn-store">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h20v18H2V3zm18 16V5H4v14h16zM6 7h12v2H6V7zm0 4h12v2H6v-2zm0 4h8v2H6v-2z" /></svg>
-                Edge 商店 (审核中)
-            </div>
-            <a href="https://github.com/ImEatFish/AnySub-website" target="_blank" class="btn btn-secondary" id="btn-offline">
+                Edge 商店
+            </a>
+            <a href="https://wwbec.lanzouu.com/ibGJt3fufzwb" target="_blank" class="btn btn-secondary" id="btn-offline">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                 获取离线包
             </a>
@@ -516,7 +525,7 @@
             zh: {
                 title: "让在线视频，拥有无限可能",
                 subtitle: "“字在”是一款专为 Edge 打造的字幕增强扩展。<br>无论是 B站、YouTube 还是奈飞，拖入本地文件，即刻享受完美的字幕体验。",
-                btnStore: "Edge 商店 (审核中)", btnOffline: "获取离线包",
+                btnStore: "Edge 商店", btnOffline: "获取离线包",
                 f1Title: "格式全能", f1Desc: "原生支持 .srt、.ass、.ssa 字幕格式。无论是简单的双语字幕，还是复杂的特效字幕，都能完美渲染。",
                 f2Title: "样式大师", f2Desc: "不喜欢默认字体？支持上传本地字体文件！还可精细调整字号、描边、阴影和背景透明度。",
                 f3Title: "完美同步", f3Desc: "声音画面对不上？内置毫秒级时间轴微调工具，拖动滑块即可实时校准，告别音画不同步。",
@@ -527,7 +536,7 @@
             en: {
                 title: "Subtitles, Anywhere You Watch",
                 subtitle: "AnySub is a powerful Edge extension for loading local subtitles. Works perfectly on YouTube, Netflix, or any HTML5 video site.",
-                btnStore: "Edge Store (Pending)", btnOffline: "Download Offline",
+                btnStore: "Edge Store", btnOffline: "Download Offline",
                 f1Title: "All Formats", f1Desc: "Native support for .srt, .ass, and .ssa formats. Renders complex styling and bilingual subtitles perfectly.",
                 f2Title: "Style Master", f2Desc: "Upload your own font files! Customize size, stroke, shadow, and background opacity to your liking.",
                 f3Title: "Perfect Sync", f3Desc: "Audio out of sync? Use the built-in millisecond adjustment tool to fix timing issues instantly.",
